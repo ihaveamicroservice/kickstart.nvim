@@ -7,6 +7,9 @@ return {
       local lint = require 'lint'
       lint.linters_by_ft = {
         markdown = { 'markdownlint' },
+        python = {
+          'mypy',
+        },
       }
 
       -- To allow other plugins to add linters to require('lint').linters_by_ft,
@@ -35,7 +38,7 @@ return {
       -- lint.linters_by_ft['inko'] = nil
       -- lint.linters_by_ft['janet'] = nil
       -- lint.linters_by_ft['json'] = nil
-      -- lint.linters_by_ft['markdown'] = nil
+      lint.linters_by_ft['markdown'] = nil
       -- lint.linters_by_ft['rst'] = nil
       -- lint.linters_by_ft['ruby'] = nil
       -- lint.linters_by_ft['terraform'] = nil
@@ -55,6 +58,11 @@ return {
           end
         end,
       })
+
+      -- https://stackoverflow.com/questions/76487150/how-to-avoid-cannot-find-implementation-or-library-stub-when-mypy-is-installed
+      local virtual = os.getenv 'VIRTUAL_ENV' or os.getenv 'CONDA_PREFIX' or '/usr'
+      table.insert(lint.linters.mypy.args, '--python-executable')
+      table.insert(lint.linters.mypy.args, virtual .. '/bin/python')
     end,
   },
 }

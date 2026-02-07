@@ -76,6 +76,27 @@ return {
       end,
       desc = 'Debug: See last session result.',
     },
+    {
+      '<F4>',
+      function()
+        require('dap').clear_breakpoints()
+      end,
+      desc = 'Debug: Clear breakpoints',
+    },
+    {
+      '<F8>',
+      function()
+        require('dap.ui.widgets').hover()
+      end,
+      desc = 'Debug: Hover',
+    },
+    {
+      '<F9>',
+      function()
+        require('dap').terminate()
+      end,
+      desc = 'Debug: Terminate Session',
+    },
   },
   config = function()
     local dap = require 'dap'
@@ -95,6 +116,7 @@ return {
       ensure_installed = {
         -- Update this to ensure that you have the debuggers for the langs you want
         'delve',
+        'debugpy',
       },
     }
 
@@ -118,23 +140,66 @@ return {
           disconnect = '⏏',
         },
       },
+
+      layouts = {
+        {
+          elements = {
+            {
+              id = 'scopes',
+              size = 0.4,
+            },
+            {
+              id = 'breakpoints',
+              size = 0.2,
+            },
+            {
+              id = 'stacks',
+              size = 0.2,
+            },
+            {
+              id = 'watches',
+              size = 0.2,
+            },
+          },
+          position = 'left',
+          size = 60,
+        },
+        {
+          elements = {
+            {
+              id = 'repl',
+              size = 0.2,
+            },
+            {
+              id = 'console',
+              size = 0.8,
+            },
+          },
+          position = 'right',
+          size = 120,
+        },
+      },
     }
 
     -- Change breakpoint icons
-    -- vim.api.nvim_set_hl(0, 'DapBreak', { fg = '#e51400' })
-    -- vim.api.nvim_set_hl(0, 'DapStop', { fg = '#ffcc00' })
-    -- local breakpoint_icons = vim.g.have_nerd_font
-    --     and { Breakpoint = '', BreakpointCondition = '', BreakpointRejected = '', LogPoint = '', Stopped = '' }
-    --   or { Breakpoint = '●', BreakpointCondition = '⊜', BreakpointRejected = '⊘', LogPoint = '◆', Stopped = '⭔' }
-    -- for type, icon in pairs(breakpoint_icons) do
-    --   local tp = 'Dap' .. type
-    --   local hl = (type == 'Stopped') and 'DapStop' or 'DapBreak'
-    --   vim.fn.sign_define(tp, { text = icon, texthl = hl, numhl = hl })
-    -- end
+    vim.api.nvim_set_hl(0, 'DapBreak', { fg = '#e51400' })
+    vim.api.nvim_set_hl(0, 'DapStop', { fg = '#ffcc00' })
+    local breakpoint_icons = vim.g.have_nerd_font
+        and { Breakpoint = '', BreakpointCondition = '', BreakpointRejected = '', LogPoint = '', Stopped = '' }
+      or { Breakpoint = '●', BreakpointCondition = '⊜', BreakpointRejected = '⊘', LogPoint = '◆', Stopped = '⭔' }
+    for type, icon in pairs(breakpoint_icons) do
+      local tp = 'Dap' .. type
+      local hl = (type == 'Stopped') and 'DapStop' or 'DapBreak'
+      vim.fn.sign_define(tp, { text = icon, texthl = hl, numhl = hl })
+    end
 
-    dap.listeners.after.event_initialized['dapui_config'] = dapui.open
-    dap.listeners.before.event_terminated['dapui_config'] = dapui.close
-    dap.listeners.before.event_exited['dapui_config'] = dapui.close
+    dap.listeners.after.event_initialized['dapui_config'] = function()
+      dapui.open()
+      -- nvim-tree and nvim-dap-ui don't play well together
+      vim.cmd 'NvimTreeClose'
+    end
+    -- dap.listeners.before.event_terminated['dapui_config'] = dapui.close
+    -- dap.listeners.before.event_exited['dapui_config'] = dapui.close
 
     -- Install golang specific config
     require('dap-go').setup {
